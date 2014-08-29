@@ -11,7 +11,7 @@ jgc <- function()
 options(java.parameters = "-Xmx8000m")
 jgc()
 
-require(Gmisc) ## Problemas instalándola para la versión 3.1 de R
+require(Gmisc)
 require(memisc)
 require(ggplot2)
 require(gridExtra)
@@ -40,16 +40,39 @@ p <- ggplot(inscritos_asistencias_profes, aes(x = Indicador, y = as.numeric(as.c
 p
 
 ## Análisis de datos del formato SUB
-inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.xlsx",1)
+inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.xlsx",1)inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.xlsx",1)
+
+inscritos_formato_sub <- read.csv2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.csv", sep = ",")
 
 vars <- colnames(inscritos_formato_sub)
 
-length(which(is.na(as.integer(as.character(inscritos_formato_sub[,8]))))) ## 91 datos sin edad
+## Ubicación por comuna por zona (no coincide)
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("") + facet_wrap(vars[13]) + scale_x_discrete("") + scale_y_continuous()
+p
 
+## Ubicación por comuna
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("Comuna") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos")
+p
+
+## Ubicación por zona
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,13])) +  geom_bar(aes(fill = inscritos_formato_sub[,13])) + scale_fill_discrete("Zona") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos")
+p
 
 ## Inscritos por nodo y sexo
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,7]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,7])) + scale_fill_discrete("Sexo") + facet_wrap(vars[30]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,7]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,7])) + scale_fill_discrete("Sexo") + facet_wrap(vars[28]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
 p
+
+## Inscritos por edad y por sexo
+p <- ggplot(inscritos_formato_sub, aes(fill = inscritos_formato_sub[,7])) +  geom_histogram(aes(as.integer(as.character(inscritos_formato_sub[,8])), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
+p
+
+## Inscritos por grado y sexo
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,27]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,27])) + scale_fill_discrete("Nivel educativo") + scale_y_continuous("Inscritos") + scale_x_discrete("Nivel educativo")
+p
+
+
+length(which(is.na(as.integer(as.character(inscritos_formato_sub[,8]))))) ## 91 datos sin edad
+
 
 ## Mostrar cuántos no tienen dato de edad
 laply(inscritos_formato_sub$EDAD..DESPLEGAR., as.character)
@@ -57,15 +80,6 @@ laply(inscritos_formato_sub$EDAD..DESPLEGAR., as.character)
 inscritos_formato_sub[inscritos_formato_sub[,8] == "",]
 
 (inscritos_formato_sub$EDAD..DESPLEGAR.[is.na(inscritos_formato_sub[,8])]) <- as.factor("Sin dato")
-
-
-## Inscritos por edad y por sexo
-p <- ggplot(inscritos_formato_sub, aes(fill = inscritos_formato_sub[,7])) +  geom_histogram(aes(as.integer(as.character(inscritos_formato_sub[,8])), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
-p
-
-
-p <- ggplot(inscritos_formato_sub, aes(as.integer(as.character(inscritos_formato_sub[,8])))) +  geom_bar() + scale_fill_discrete("Sexo") + facet_wrap(vars[7]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
-p
 
 
 ## Inscritos por nodo y por edad
