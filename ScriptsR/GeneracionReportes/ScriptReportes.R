@@ -11,13 +11,13 @@ jgc <- function()
 options(java.parameters = "-Xmx8000m")
 jgc()
 
-require(Gmisc) ## Problemas instalándola para la versión 3.1 de R
+require(Gmisc)
 require(memisc)
 require(ggplot2)
 require(gridExtra)
 require(pander)
 require(knitr)
-require(RMySQL)
+require(RMySQL) ## No tengo motor de bases de datos mysql en el macjaro
 require(sqldf)
 require(plyr)
 require(ggplot2)

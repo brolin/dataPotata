@@ -1,0 +1,8 @@
+value
+.replace("1","Nor-Oriental")
+.replace("6","Sur-Occidental")
+.replace("2","Nor-Occidental")
+.replace("4","Centro-Occidental")
+.replace("3","Centro-Oriental")
+.replace("5","Sur-Oriental")
+.replace("9","Otro")
