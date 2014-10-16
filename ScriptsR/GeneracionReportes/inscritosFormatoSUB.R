@@ -29,7 +29,7 @@ require(dplyr) ## Para filtrar como explican acá http://www.r-bloggers.com/dply
 # Se leen datos para cada nodo de los buzones
 inscritos_asistencias_profes <- read.xlsx2("./Data/InscritosFormatoSUB/InscritosFormatoSUB_27_08_2014.xlsx",1) # Hoja resumen
 
-inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/InscritosFormatoSUB_27_08_2014.xlsx",3) # Hoja resumen
+inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/BD_Casas_de_Mu-sica_SUB_08_09_2014-refined.xls",1) # Hoja resumen
 
 ## GRÁFICAS
 
@@ -40,14 +40,14 @@ p <- ggplot(inscritos_asistencias_profes, aes(x = Indicador, y = as.numeric(as.c
 p
 
 ## Análisis de datos del formato SUB
-inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.xlsx",1)inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.xlsx",1)
+inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/BD_Casas_de_Musica_SUB_08_09_2014-refined.xls",1)
 
 inscritos_formato_sub <- read.csv2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.csv", sep = ",")
 
 vars <- colnames(inscritos_formato_sub)
 
 ## Ubicación por comuna por zona (no coincide)
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("") + facet_wrap(vars[13]) + scale_x_discrete("") + scale_y_continuous()
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("") + facet_wrap(vars[13]) + scale_x_discrete("", breaks = NULL) + scale_y_continuous("Cantidad de inscritos")
 p
 
 ## Ubicación por comuna
@@ -59,18 +59,35 @@ p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,13])) +  geom_bar(
 p
 
 ## Inscritos por nodo y sexo
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,7]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,7])) + scale_fill_discrete("Sexo") + facet_wrap(vars[28]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,7]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,7])) + scale_fill_discrete("Sexo") + facet_wrap(vars[26]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
 p
 
 ## Inscritos por edad y por sexo
 p <- ggplot(inscritos_formato_sub, aes(fill = inscritos_formato_sub[,7])) +  geom_histogram(aes(as.integer(as.character(inscritos_formato_sub[,8])), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
 p
 
-## Inscritos por grado y sexo
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,27]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,27])) + scale_fill_discrete("Nivel educativo") + scale_y_continuous("Inscritos") + scale_x_discrete("Nivel educativo")
+## Inscritos por grado
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,25]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,25])) + scale_fill_discrete("Nivel educativo") + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Nivel educativo") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p
 
+## Inscritos por barrio
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,11]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,11])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Barrio") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p
 
+## Inscritos por Tipo de documento
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,1]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,1])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Tipo de documento") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p
+
+## Inscritos por EPS
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,17]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,17])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("EPS") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p
+
+## Inscritos por Tipo de Escuela
+p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,28]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,28])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("EPS") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p
+
+########################################################################
+########################################################################
 length(which(is.na(as.integer(as.character(inscritos_formato_sub[,8]))))) ## 91 datos sin edad
 
 
