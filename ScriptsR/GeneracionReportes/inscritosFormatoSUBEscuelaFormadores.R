@@ -27,10 +27,10 @@ require(stringr)
 require(dplyr) ## Para filtrar como explican acá http://www.r-bloggers.com/dplyr-a-gamechanger-for-data-manipulation-in-r/
 require(stringi) ## http://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
 
+require(plyr)
+
 # Se leen datos para cada nodo de los buzones
 inscritos_asistencias_profes <- read.xlsx2("./Data/InscritosFormatoSUB/InscritosFormatoSUB_27_08_2014.xlsx",1) # Hoja resumen
-
-inscritos_formato_sub <- read.xlsx2("./Data/InscritosFormatoSUB/BD_Casas_de_Mu-sica_SUB_08_09_2014-refined.xls",1) # Hoja resumen
 
 ## GRÁFICAS
 
@@ -40,26 +40,60 @@ p
 p <- ggplot(inscritos_asistencias_profes, aes(x = Indicador, y = as.numeric(as.character(Cifra)))) + geom_bar(aes(fill = Cifra) , stat="identity") + theme(axis.text.x  = element_text(angle=90)) + scale_y_continuous("Cifra")
 p
 
-## Análisis de datos del formato SUB
-inscritos_formato_sub <- read.xlsx2("./Data/InformeOct23_2014/Inscripciones-nodos-SUBoct-23-2014.refined.xlsx",1)
+## INFORME FINAL
+## RitmosBrasileros
+formadores.ritmosbra <- read.xlsx2("./Data/InformeFinal/InscripcionesSUBEscuelaDeFormadores.xlsx", 1, endRow = 36)
 
-inscritos <- tbl_df(inscritos_formato_sub)
+nombres_columnas <- c("nombre","tipo_documento","no_documento","sexo","edad","fecha_nacimiento","direccion","barrio","comuna","zona","estrato","telefono","celular","eps","correo","etnia","desplazado","diversidad_sexual","nombre_acudiente","telefono_acudiente")
 
-inscritos_formato_sub <- read.csv2("./Data/InscritosFormatoSUB/FormatoSUB_CasasDeMusica_refined.csv", sep = ",")
+inscritos_formato_sub <- formadores.ritmosbra
 
-## INFORME FINAL -> 757
-inscritos_formato_sub <- read.csv2("./Data/InformeFinal/Inscripciones nodos SUB - BASE DE DATOS GENERAL no modificar.csv", sep = ",", skip = 4)
+nombres_columnas_orig <- colnames(inscritos_formato_sub)
 
-## Septiembre -> 729
-inscritos_formato_sub <- read.csv2("./Data/InformeFinal/Inscripciones nodos SUB-Septiembre - BASE DE DATOS.csv", sep = ",", skip = 4)
+colnames(inscritos_formato_sub) <- nombres_columnas
 
-nombres_columnas <- c("tipo_documento","no_documento","primer_nombre","segundo_nombre","primer_apellido","segundo_apellido","sexo","edad","fecha_nacimiento","direccion","barrio","comuna","zona","estrato","telefono","celular","eps","correo","novedades_llamadas","etnia","desplazado","diversidad_sexual","fecha_ingreso_programa","jornada","institucion_educativa","grado","nombre_equipamiento_que_asiste","direccion_equipamiento","tipo_escuela_musica","comuna_escuela_musica","nombres_apellidos_acudiente","parentesco_acudiente","telefono_acudiente","celular_acudiente")
+## elimina las 6 primeras filas
+inscritos_formato_sub <- inscritos_formato_sub[-c(1:6),]
 
+inscritos_sub.tidy <- tbl_df(inscritos_formato_sub)
 
-vars <- colnames(inscritos_formato_sub)
+formadores.ritmosbra <- inscritos_formato_sub
+
+## Amplificación ensambles acústicos
+formadores.ampensamacust <- read.xlsx2("./Data/InformeFinal/InscripcionesSUBEscuelaDeFormadores.xlsx", 2, endRow = 21)
+
+nombres_columnas <- c("nombre","tipo_documento","no_documento","sexo","edad","fecha_nacimiento","direccion","barrio","comuna","zona","estrato","telefono","celular","eps","correo","etnia","desplazado","diversidad_sexual","nombre_acudiente","telefono_acudiente")
+
+inscritos_formato_sub <- formadores.ampensamacust
+
+nombres_columnas_orig <- colnames(inscritos_formato_sub)
+
 colnames(inscritos_formato_sub) <- nombres_columnas
 
 inscritos_sub.tidy <- tbl_df(inscritos_formato_sub)
+
+formadores.ampensamacust <- inscritos_formato_sub
+
+## Improvisaciones y concepciones del jazz
+formadores.improjazz <- read.xlsx2("./Data/InformeFinal/InscripcionesSUBEscuelaDeFormadores.xlsx", 3, endRow = 23)
+
+nombres_columnas <- c("nombre","tipo_documento","no_documento","sexo","edad","fecha_nacimiento","direccion","barrio","comuna","zona","estrato","telefono","celular","eps","correo","etnia","desplazado","diversidad_sexual","nombre_acudiente","telefono_acudiente")
+
+inscritos_formato_sub <- formadores.improjazz
+
+nombres_columnas_orig <- colnames(inscritos_formato_sub)
+
+colnames(inscritos_formato_sub) <- nombres_columnas
+
+inscritos_sub.tidy <- tbl_df(inscritos_formato_sub)
+
+formadores.improjazz <- inscritos_formato_sub
+
+############################
+# Uno todos los formatos de registro de los tres cursos que hay por ahora
+escuelaFormadores_sub <- rbind(mutate(formadores.ritmosbra, taller = "Ritmos Brasileros"),mutate(formadores.ampensamacust, taller = "Amplificación de Ensambles Acústicos"),mutate(formadores.improjazz, taller = "Improvisación y Concepciones del Jazz"))
+
+inscritos_sub.tidy <- tbl_df(escuelaFormadores_sub)
 
 ## tipo_documento
 inscritos_sub.tidy %>%
@@ -70,16 +104,15 @@ inscritos_sub.tidy$tipo_documento <- str_trim(inscritos_sub.tidy$tipo_documento)
 
 inscritos_sub.tidy$tipo_documento <- str_replace(inscritos_sub.tidy$tipo_documento,".*NO [a-zA-Z].*","EN PROCESO DE VERIFICACIÓN") %>%
     str_replace(.,"^$","EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,"\\b^T.*","TARJETA DE IDENTIDAD") %>%
+    str_replace(.,"\\b^TI.*","TARJETA DE IDENTIDAD") %>%
     str_replace(.,"\\b^R.*","REGISTRO CIVIL") %>%
-    str_replace(.,"\\b^C.*","CÉDULA DE CIUDADANÍA") %>%
+    str_replace(.,"\\b^CC.*","CÉDULA DE CIUDADANÍA") %>%
     str_replace(.,"N(U|Ú)MERO.*","NÚMERO EQUIVOCADO")
 
 ## no_documento
 inscritos_sub.tidy %>%
     group_by("no_documento") %>%
-    summarise(cuenta = n()) %>%
-    View()
+    summarise(cuenta = n())
 
 inscritos_sub.tidy$no_documento <- inscritos_sub.tidy$no_documento %>%
     str_replace(.,"(\\d)\\D+(\\d\\D)*","\\1\\2") %>%
@@ -89,8 +122,9 @@ inscritos_sub.tidy$no_documento <- inscritos_sub.tidy$no_documento %>%
 ## comuna
 inscritos_sub.tidy %>%
     group_by("comuna") %>%
-    summarise(cuenta = n()) %>%
-    View()
+    summarise(cuenta = n())
+
+inscritos_sub.tidy$comuna <- str_trim(inscritos_sub.tidy$comuna)
 
 ## buscar como cargar desde un archivo
 inscritos_sub.tidy$comuna <- inscritos_sub.tidy$comuna %>%
@@ -133,13 +167,15 @@ str_replace(.,ignore.case("\\bD5\\b"),"Marinilla") %>%
 str_replace(.,ignore.case("\\bD6\\b"),"Santuario") %>%
 str_replace(.,ignore.case("\\bD7\\b"),"La Unión") %>%
 str_replace(.,ignore.case("\\bD8\\b"),"El Retiro")  %>%
+str_replace(.,ignore.case("\\bNo registra\\b"),"EN PROCESO DE VERIFICACIÓN")  %>%
     str_replace(.,"^$","EN PROCESO DE VERIFICACIÓN")
 
 ## zona
 inscritos_sub.tidy %>%
     group_by("zona") %>%
-    summarise(cuenta = n()) %>%
-    View()
+    summarise(cuenta = n())
+
+inscritos_sub.tidy$zona <- str_trim(inscritos_sub.tidy$zona)
 
 ## Reemplaza los valores según código SUB
 inscritos_sub.tidy$zona <- inscritos_sub.tidy$zona %>%
@@ -149,28 +185,16 @@ inscritos_sub.tidy$zona <- inscritos_sub.tidy$zona %>%
     str_replace(.,"\\b4\\b","Centro-Occidental") %>%
     str_replace(.,"\\b3\\b","Centro-Oriental") %>%
     str_replace(.,"\\b5\\b","Sur-Oriental") %>%
+    str_replace(.,"\\b^$\\b","EN PROCESO DE VERIFICACIÓN") %>%
     str_replace(.,"\\b9\\b","Otro")
 
 ## Los que queda NA se reemplazan para verificar
 inscritos_sub.tidy$zona[is.na(inscritos_sub.tidy$zona)] <- "EN PROCESO DE VERIFICACIÓN"
 
-## nodo
-inscritos_sub.tidy %>%
-    group_by("nombre_equipamiento_que_asiste") %>%
-    summarise(cuenta = n()) %>%
-    View()
-
-inscritos_sub.tidy$nombre_equipamiento_que_asiste <- inscritos_sub.tidy$nombre_equipamiento_que_asiste %>%
-    str_replace(.,"\\bCentro Cultura Los COlores\\b","Centro Cultural Los Colores") %>%
-    str_replace(.,"\\bParque Bublioteca La Ladera\\b","Parque Biblioteca La Ladera") %>%
-    str_replace(.,"\\bRayito de Sol \\b","Rayito de Sol") %>%
-    str_replace(.,"^$","EN PROCESO DE VERIFICACIÓN")
-
 ## sexo
 inscritos_sub.tidy %>%
     group_by("sexo") %>%
-    summarise(cuenta = n()) %>%
-    View()
+    summarise(cuenta = n())
 
 inscritos_sub.tidy$sexo <- inscritos_sub.tidy$sexo %>%
     str_replace(.,ignore.case("\\bf\\b"),"Femenino") %>%
@@ -181,8 +205,6 @@ inscritos_sub.tidy %>%
     group_by("barrio") %>%
     summarise(cuenta = n())
 
-%>%
-    View()
 
 inscritos_sub.tidy$barrio <- stri_trans_totitle(inscritos_sub.tidy$barrio) ## http://stackoverflow.com/questions/6364783/capitalize-the-first-letter-of-both-words-in-a-two-word-string
 
@@ -446,6 +468,7 @@ str_replace(.,ignore.case("\\b1511\\b"),"La Colina") %>%
 str_replace(.,ignore.case("\\b1601\\b"),"Fatima") %>%
 str_replace(.,ignore.case("\\b1602\\b"),"Rosales") %>%
 str_replace(.,ignore.case("\\b1603\\b"),"Belen") %>%
+str_replace(.,ignore.case("\\bbel.n\\b"),"Belen") %>%
 str_replace(.,ignore.case("\\b1604\\b"),"Granada") %>%
 str_replace(.,ignore.case("\\b1605\\b"),"San Bernardo") %>%
 str_replace(.,ignore.case("\\b1606\\b"),"Las Playas") %>%
@@ -578,124 +601,41 @@ str_replace(.,ignore.case("\\bStadio\\b"),"Estadio") %>%
 str_replace(.,ignore.case("\\bBelen\\b"),"Belén") %>%
 str_replace(.,"^$","EN PROCESO DE VERIFICACIÓN")
 
-## grado
+## taller
 inscritos_sub.tidy %>%
-    group_by("grado") %>%
+    group_by("taller") %>%
     summarise(cuenta = n())
 
-%>%
-    View()
-
-inscritos_sub.tidy$grado <- str_trim(inscritos_sub.tidy$grado) ## Remueve espacio del inicio y del final
-
-inscritos_sub.tidy$grado <- inscritos_sub.tidy$grado %>%
-    str_replace(.,ignore.case("\\b1[°rdtmvn].*"),"1") %>%
-    str_replace(.,ignore.case("\\b2[°rdtmvn].*"),"2") %>%
-    str_replace(.,ignore.case("\\b3[°rdtmvn].*"),"3") %>%
-    str_replace(.,ignore.case("\\b4[°rdtmvn].*"),"4") %>%
-    str_replace(.,ignore.case("\\b5[°rdtmvn].*"),"5") %>%
-    str_replace(.,ignore.case("\\b6[°rdtmvn].*"),"6") %>%
-    str_replace(.,ignore.case("\\b7[°rdtmvn].*"),"7") %>%
-    str_replace(.,ignore.case("\\b8[°rdtmvn].*"),"8") %>%
-    str_replace(.,ignore.case("\\b9[°rdtmvn].*"),"9") %>%
-    str_replace(.,ignore.case("\\b10[°rdtmvn].*"),"10") %>%
-    str_replace(.,ignore.case("\\b11[°rdtmvn].*"),"11") %>%
-    str_replace(.,ignore.case("\\bPre.*"),"Preescolar") %>%
-    str_replace(.,ignore.case("\\bTra[cns].*"),"Preescolar") %>%
-    str_replace(.,ignore.case("\\bJar.*"),"Preescolar") %>%
-    str_replace(.,ignore.case("\\bGuarderia\\b"),"Preescolar") %>%
-    str_replace(.,ignore.case("\\bEstaría en 2\\b"),"2") %>%
-    str_replace(.,ignore.case("\\bNo.*"),"No está estudiando") %>%
-    str_replace(.,ignore.case("\\bPrimero\\b"),"1") %>%
-    str_replace(.,ignore.case("\\bplay 3\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\bProcesos Básicos\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\bbásicos\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("^$"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\b-\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\b3122163163\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\bPor logros\\b"),"EN PROCESO DE VERIFICACIÓN") %>%
-    str_replace(.,ignore.case("\\bAdministración Gerencial\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bAnimacion Digital\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bAsistencia Administrativa\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bBioingeniería\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bComunicion\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bCurso\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bDiplomado\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bDiseño Grafico\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bGastronomia\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIdiomas\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIng Ambiental\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIng Biomédica\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIng Civil\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIng fisica\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIng. Informal\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bIngeniería Química\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bNegocios Internacionales\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bPróxima a ingresar en el Sena.*"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bRed de escuelas de música\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bTeatro\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bTécnología de computo\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bEducación Superior.*\\b"),"Educacion Superior") %>%
-    str_replace(.,ignore.case("\\bTrabajo Social\\b"),"Educacion Superior")
-
-
-## Test zone
-pattern <- "\\bEducación Superior.*"
-inscritos_sub.tidy$grado %>% str_match(.,ignore.case(pattern))
-cuales <- which(!is.na(inscritos_sub.tidy$grado %>% str_match(.,pattern)))
-View(inscritos_sub.tidy[cuales,"grado"])
-
-inscritos_sub.tidy[inscritos_sub.tidy$grado == "3122163163",c("grado","edad","nombre_equipamiento_que_asiste")]
-## Test zone
-
-
-## eps
-inscritos_sub.tidy %>%
-    group_by("eps") %>%
-    summarise(cuenta = n()) %>%
-    View()
-
-
-which(!is.na(str_match(inscritos_sub.tidy$tipo_documento,"\\bNO \\w*")))
-
-str_match(inscritos_sub.tidy$tipo_documento,".*NO [a-zA-Z].*")
-
-inscritos_sub.tidy$tipo_documento <-  str_replace(inscritos_sub.tidy$tipo_documento,"N(U|Ú)MERO.*","NÚMERO EQUIVOCADO")
-
-inscritos_sub.tidy$tipo_documento <-  str_replace(inscritos_sub.tidy$tipo_documento,"TARJETA.*","TARJETA DE IDENTIDAD")
-
-
-which(is.na(as.numeric(str_match(inscritos_sub.tidy$no_documento,"\\d*"))))
-
-## Ubicación por comuna por zona (no coincide)
-## p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("") + facet_wrap(vars[13]) + scale_x_discrete("", breaks = NULL) + scale_y_continuous("Cantidad de inscritos")
-## p
 
 ## el organizado lo ponemos como el que se viene graficando
 inscritos_formato_sub <- inscritos_sub.tidy
 
 
 ## Ubicación por comuna
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("Comuna") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p <- ggplot(inscritos_formato_sub, aes(`comuna`)) +  geom_bar(aes(fill = `comuna`)) + scale_fill_discrete("Comuna") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + facet_wrap("taller")
 p
+
+dev.new()
 
 inscritos_sub.tidy%>%
     group_by(comuna) %>%
     summarise(participantes = n()) %>%
     arrange(desc(participantes))
 
-## Ubicación por zona
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,13])) +  geom_bar(aes(fill = inscritos_formato_sub[,13])) + scale_fill_discrete("Zona") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos")
-p
+## ## Ubicación por zona
+## p <- ggplot(inscritos_formato_sub, aes(`zona`)) +  geom_bar(aes(fill = `zona`)) + scale_fill_discrete("Zona") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos")
+## p
 
-inscritos %>%
-    group_by(zona) %>%
-    summarise(participantes = n()) %>%
-    arrange(desc(participantes))
+## inscritos %>%
+##     group_by(zona) %>%
+##     summarise(participantes = n()) %>%
+##     arrange(desc(participantes))
 
 ## Inscritos por nodo y sexo
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,7]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,7])) + scale_fill_discrete("Sexo") + facet_wrap(nombres_columnas[27]) + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
+p <- ggplot(inscritos_formato_sub, aes(`sexo`), na.rm = FALSE) +  geom_bar(aes(fill = `sexo`)) + scale_fill_discrete("Sexo") + facet_wrap("taller") + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
 p
+
+dev.new()
 
 ## nombres_columnas en lugar de vars
 inscritos_formato_sub %>%
@@ -705,23 +645,15 @@ inscritos_formato_sub %>%
 
 
 ## Inscritos por edad y por sexo
-p <- ggplot(inscritos_formato_sub, aes(fill = inscritos_formato_sub[,7])) +  geom_histogram(aes(as.integer(as.character(inscritos_formato_sub[,8])), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
+p <- ggplot(inscritos_formato_sub, aes(fill = `sexo`)) +  geom_histogram(aes(as.integer(as.character(`edad`)), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
 p
+
+dev.new()
 
 inscritos %>%
     group_by(edad, sexo) %>%
     summarise(participantes = n())
 
-niveles_grado<- levels(factor(inscritos_formato_sub$grado))
-niveles_grado <- niveles_grado[c(1,4:11,2:3,12,14:15,13)]
-inscritos_formato_sub$grado <- factor(inscritos_formato_sub$grado, levels = niveles_grado)
-## Inscritos por grado
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,26]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,26])) + scale_fill_discrete("Nivel educativo") + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Nivel educativo") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
-
-inscritos_formato_sub %>%
-    group_by(grado) %>%
-    summarise(participantes = n())
 
 ## Inscritos por barrio
 inscritos_formato_sub %>%
@@ -730,64 +662,23 @@ inscritos_formato_sub %>%
     top_n(10)
 
 
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,11]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,11])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Barrio") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p <- ggplot(inscritos_formato_sub, aes(`barrio`), na.rm = FALSE) +  geom_bar(aes(fill = `barrio`)) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Barrio") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p
+
+dev.new()
 
 ## Inscritos por Tipo de documento
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,1]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,1])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Tipo de documento") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p <- ggplot(inscritos_formato_sub, aes(`tipo_documento`), na.rm = FALSE) +  geom_bar(aes(fill = "documento")) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Tipo de documento") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p
 
-## Inscritos por EPS
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,17]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,17])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("EPS") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
 
-## Inscritos por Tipo de Escuela
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,29]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,29])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Tipo de Escuela") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
 
-## Mapa
-########################################################################
-centroides_barrios <- read.csv2("./Data/CentroidesBarriosMedellin.csv", sep=",")
-centroides <- tbl_df(centroides_barrios)
-inscritos_coordenadas<- merge(inscritos,centroides, by.x = "barrio", by.y = "Nombre")
-write.csv2(prueba, "./Data/InformeOct23_2014/InscritosConCoordenadas.csv")
-########################################################################
+## Test zone
+pattern <- "\\bEducación Superior.*"
+inscritos_sub.tidy$grado %>% str_match(.,ignore.case(pattern))
+cuales <- which(!is.na(inscritos_sub.tidy$grado %>% str_match(.,pattern)))
+View(inscritos_sub.tidy[cuales,"grado"])
 
-############### Escuela de formadores ##################################
-########################################################################
-## Análisis de datos del formato SUB
-inscritos_formato_sub <- read.xlsx2("./Data/InformeOct23_2014/Listado Inscripción Escuela de Formadores SUB.xlsx",1, startRow = 9, endRow = 38 )
+inscritos_sub.tidy[inscritos_sub.tidy$no_documento == "8155540",]
 
-inscritos_formato_sub <- read.xlsx2("./Data/InformeOct23_2014/Listado Inscripción Escuela de Formadores SUB.xlsx",2, startRow = 9, endRow = 29 )
-
-inscritos_formato_sub <- read.xlsx2("./Data/InformeOct23_2014/Listado Inscripción Escuela de Formadores SUB.xlsx",3, startRow = 9, endRow = 31 )
-
-inscritos <- tbl_df(inscritos_formato_sub)
-
-nombres_columnas <- c("tipo_documento","no_documento","primer_nombre","segundo_nombre","primer_apellido","segundo_apellido","sexo","edad","fecha_nacimiento","direccion","barrio","comuna","zona","estrato","telefono","celular","eps","correo","novedades_llamadas","etnia","desplazado","diversidad_sexual","fecha_ingreso_programa","jornada","institucion_educativa","grado","nombre_equipamiento_que_asiste","direccion_equipamiento","tipo_escuela_musica","comuna_escuela_musica","nombres_apellidos_acudiente","parentesco_acudiente","telefono_acudiente","celular_acudiente")
-
-vars <- colnames(inscritos_formato_sub)
-
-## Ubicación por comuna por zona (no coincide)
-## p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,12])) +  geom_bar(aes(fill = inscritos_formato_sub[,12])) + scale_fill_discrete("") + facet_wrap(vars[13]) + scale_x_discrete("", breaks = NULL) + scale_y_continuous("Cantidad de inscritos")
-## p
-
-## Ubicación por comuna
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,9])) +  geom_bar(aes(fill = inscritos_formato_sub[,9])) + scale_fill_discrete("Comuna") + scale_x_discrete("") + scale_y_continuous("Cantidad de inscritos") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
-
-## Inscritos sexo
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,4]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,4])) + scale_fill_discrete("Sexo") + scale_y_continuous("Inscritos") + scale_x_discrete("Sexo")
-p
-
-## Inscritos por edad y por sexo
-p <- ggplot(inscritos_formato_sub, aes(fill = inscritos_formato_sub[,4])) +  geom_histogram(aes(as.integer(as.character(inscritos_formato_sub[,5])), na.keep = TRUE ))  + scale_y_discrete("Inscritos") + scale_x_discrete("Edad") + scale_fill_discrete("Sexo")
-p
-
-## Inscritos por barrio
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,8]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,8])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("Barrio") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
-
-## Inscritos por EPS
-p <- ggplot(inscritos_formato_sub, aes(inscritos_formato_sub[,14]), na.rm = FALSE) +  geom_bar(aes(fill = inscritos_formato_sub[,14])) + scale_fill_discrete(breaks = NULL) + scale_y_continuous("Cantidad de inscritos") + scale_x_discrete("EPS") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
+## Test zone

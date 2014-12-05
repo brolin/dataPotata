@@ -28,6 +28,8 @@ require(dplyr) ## Para filtrar como explican acá http://www.r-bloggers.com/dply
 
 forfor_ensambles <- read.xlsx2("./Data/SUB_FormadorDeFormadores/Lista de asistencia Escuela de formadores COMPLETA.xlsx",1)
 
+forfor_ensambles <- read.xlsx2("./Data/InformeFinal/AsistenciaMusicaEnNodos.xlsx",1, endRow = 30)
+
 pa_pintar <- forfor_ensambles %>% group_by(S1, S2) %>% tally(sort = TRUE) %>% melt( id.vars=c("n"))
 
 X.tidy = ddply(pa_pintar, .(variable,value), summarise, count=sum(n), .drop=FALSE)
